@@ -17,7 +17,7 @@ using QuestEvent = System.UInt32; // wrong, only for compilation
 using VOFlags = System.UInt32; // wrong, only for compilation
 using DrawPathNodeType = System.UInt32; // wrong, only for compilation
 
-namespace LeagueSandbox.GameServer.Logic.API.Network
+namespace LeagueAPI.Network
 {
     public interface IClientAPI
     {
