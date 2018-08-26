@@ -7,7 +7,7 @@ namespace LeagueAPI.GameObjects
     /// <summary>
     /// interface for moveable objects (minions/champions)
     /// </summary>
-    interface IMoveableGameObject : IGameObject
+    public interface IMoveableGameObject : IGameObject
     {
         List<Vector2> Waypoints { get; }
         int CurWaypoint { get; }

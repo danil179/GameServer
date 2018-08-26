@@ -10,14 +10,11 @@ namespace LeagueAPI.GameObjects
         // REVIEW: what are these?
         //int AttackerCount { get; }
         //void DecrementAttackerCount();
-        //void IncrementAttackerCount();
-
-        
-        
-        bool IsSimpleTarget { get; }
+        //void IncrementAttackerCount();      
         uint NetId { get; }
         Target Target { get; set; }
         TeamId Team { get; }
+
         // consider moving this to IVisionGameObject
         float VisionRadius { get; }
 

@@ -42,9 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\Definitions\TeamId.cs" />
     <Compile Include="Common\Pair.cs" />
+    <Compile Include="GameObjects\ICollideableGameObject.cs" />
     <Compile Include="GameObjects\IGameObject.cs" />
     <Compile Include="GameObjects\IMoveableGameObject.cs" />
+    <Compile Include="GameObjects\ITargetableGameObject.cs" />
     <Compile Include="MovementSystem\Target.cs" />
     <Compile Include="Network\IClientAPI.cs" />
     <Compile Include="Network\IServerAPI.cs" />

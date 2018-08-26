@@ -497,7 +497,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <Content Include="GameServer.Core.GPL.txt" />
-    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
