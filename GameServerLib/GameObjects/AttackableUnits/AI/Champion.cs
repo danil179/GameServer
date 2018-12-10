@@ -6,16 +6,17 @@ using GameServerCore.Domain;
 using GameServerCore.Domain.GameObjects;
 using GameServerCore.NetInfo;
 using GameServerCore.Enums;
-using LeagueSandbox.GameServer.API;
 using LeagueSandbox.GameServer.Content;
 using LeagueSandbox.GameServer.GameObjects.Spells;
 using LeagueSandbox.GameServer.GameObjects.Stats;
 using LeagueSandbox.GameServer.Items;
+using GameServerCore;
 
 namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
 {
     public class Champion : ObjAiBase, IChampion
     {
+        public IGame RefGame { get; }
         public IShop Shop { get; protected set; }
         public float RespawnTimer { get; private set; }
         public float ChampionGoldFromMinions { get; set; }
@@ -47,6 +48,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
                         uint netId = 0)
             : base(game, model, new Stats.Stats(), 30, 0, 0, 1200, netId)
         {
+            RefGame = game;
             _playerId = playerId;
             _playerTeamSpecialId = playerTeamSpecialId;
             RuneList = runeList;
@@ -54,6 +56,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
             Spells = new Dictionary<short, ISpell>();
 
             Inventory = InventoryManager.CreateInventory();
+            
             Shop = Items.Shop.CreateShop(this, game);
 
             Stats.Gold = _game.Map.MapProperties.StartingGold;

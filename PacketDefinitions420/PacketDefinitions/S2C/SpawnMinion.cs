@@ -4,9 +4,9 @@ using GameServerCore.Packets.PacketDefinitions;
 
 namespace PacketDefinitions420.PacketDefinitions.S2C
 {
-    public class SpawnPlaceable : Packet
+    public class SpawnMinion : Packet
     {
-        public SpawnPlaceable(IPlaceable p)
+        public SpawnMinion(IMinion p)
             : base(PacketCmd.PKT_S2C_OBJECT_SPAWN)
         {
 

@@ -35,6 +35,7 @@ namespace GameServerCore.Domain.GameObjects
         IStat GoldPerSecond { get; }
         IStat HealthPoints { get; }
         IStat HealthRegeneration { get; }
+
         IStat LifeSteal { get; }
         IStat MagicResist { get; }
         IStat MagicPenetration { get; }

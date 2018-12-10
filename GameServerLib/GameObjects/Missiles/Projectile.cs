@@ -7,7 +7,9 @@ using LeagueSandbox.GameServer.Content;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI;
 using LeagueSandbox.GameServer.GameObjects.AttackableUnits.Buildings.AnimatedBuildings;
+using static LeagueSandbox.GameServer.API.ApiFunctionManager;
 using LeagueSandbox.GameServer.GameObjects.Other;
+using System;
 
 namespace LeagueSandbox.GameServer.GameObjects.Missiles
 {
@@ -20,6 +22,8 @@ namespace LeagueSandbox.GameServer.GameObjects.Missiles
 
         protected float _moveSpeed;
         protected ISpell _originSpell;
+
+        public string _projectileName;
 
         public Projectile(
             Game game,
@@ -48,6 +52,8 @@ namespace LeagueSandbox.GameServer.GameObjects.Missiles
             ObjectsHit = new List<IGameObject>();
 
             Target = target;
+
+            _projectileName = projectileName;
         }
 
         public override void Update(float diff)
@@ -57,8 +63,18 @@ namespace LeagueSandbox.GameServer.GameObjects.Missiles
                 SetToRemove();
                 return;
             }
-
+            // Debug for true positions of projectiles if client does not display them properly:
+            //float currxpos = X;
+            //float currypos = Y;
             base.Update(diff);
+            //float prevxpos = X;
+            //float prevypos = Y;
+            //if (_projectileName == "")
+            //{
+                
+            //    LogInfo("Name: " + _projectileName + " MissileTravelDistX: " + Math.Abs(currxpos - prevxpos) + " MissileTravelDistY: " + Math.Abs(currypos - prevypos));
+            //    LogInfo("Name: " + _projectileName + " Prev Missile X: " + prevxpos + " Prev Missile Y: " + prevypos + " Curr Missile X: " + currxpos + " Curr Missile Y: " + currypos);
+            //}
         }
 
         public override void OnCollision(IGameObject collider)
@@ -161,8 +177,9 @@ namespace LeagueSandbox.GameServer.GameObjects.Missiles
 
             switch (unit)
             {
+                case ILaneMinion _ when !((SpellData.Flags & (int)SpellFlag.SPELL_FLAG_AFFECT_MINIONS) > 0):
                 case IMinion _ when !((SpellData.Flags & (int)SpellFlag.SPELL_FLAG_AFFECT_MINIONS) > 0):
-                case IPlaceable _ when !((SpellData.Flags & (int)SpellFlag.SPELL_FLAG_AFFECT_USEABLE) > 0):
+                // case IPlaceable _ when !((SpellData.Flags & (int)SpellFlag.SPELL_FLAG_AFFECT_USEABLE) > 0):
                 case IBaseTurret _ when !((SpellData.Flags & (int)SpellFlag.SPELL_FLAG_AFFECT_TURRETS) > 0):
                     return false;
             }

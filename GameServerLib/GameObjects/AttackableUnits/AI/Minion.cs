@@ -1,78 +1,42 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using GameServerCore;
 using GameServerCore.Domain.GameObjects;
 using GameServerCore.Enums;
 using LeagueSandbox.GameServer.GameObjects.Stats;
+using System.Linq;
 
 namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
 {
     public class Minion : ObjAiBase, IMinion
     {
-        /// <summary>
-        /// Const waypoints that define the minion's route
-        /// </summary>
-        protected List<Vector2> _mainWaypoints;
-        protected int _curMainWaypoint;
-        public MinionSpawnPosition SpawnPosition { get; }
-        public MinionSpawnType MinionSpawnType { get; }
+        public string Name { get; }
+        public IObjAiBase Owner { get; } // We'll probably want to change this in the future
         protected bool _aiPaused;
 
         public Minion(
-            Game game,
-            MinionSpawnType spawnType,
-            MinionSpawnPosition position,
-            List<Vector2> mainWaypoints,
+            IGame game,
+            IObjAiBase owner,
+            float x,
+            float y,
+            string model,
+            string name,
+            int visionRadius = 0,
             uint netId = 0
-        ) : base(game, "", new Stats.Stats(), 40, 0, 0, 1100, netId)
+        ) : base((Game)game, model, new Stats.Stats(), 40, x, y, 0, netId)
         {
-            MinionSpawnType = spawnType;
-            SpawnPosition = position;
-            _mainWaypoints = mainWaypoints;
-            _curMainWaypoint = 0;
-            _aiPaused = false;
+            SetTeam(owner.Team);
 
-            var spawnSpecifics = _game.Map.MapProperties.GetMinionSpawnPosition(SpawnPosition);
-            SetTeam(spawnSpecifics.Item1);
-            SetPosition(spawnSpecifics.Item2.X, spawnSpecifics.Item2.Y);
-
-            _game.Map.MapProperties.SetMinionStats(this); // Let the map decide how strong this minion has to be.
-
-            // Set model
-            Model = _game.Map.MapProperties.GetMinionModel(spawnSpecifics.Item1, spawnType);
+            Owner = owner;
 
             // Fix issues induced by having an empty model string
             CollisionRadius = _game.Config.ContentManager.GetCharData(Model).PathfindingCollisionRadius;
 
-            // If we have lane path instructions from the map
-            if (mainWaypoints.Count > 0)
-            {
-                // Follow these instructions
-                SetWaypoints(new List<Vector2> { mainWaypoints[0], mainWaypoints[1] });
-            }
-            else
-            {
-                // Otherwise path to own position. (Stand still)
-                SetWaypoints(new List<Vector2> { new Vector2(X, Y), new Vector2(X, Y) });
-            }
+            SetVisibleByTeam(Team, true);
 
+            //MoveOrder = MoveOrder.MOVE_ORDER_MOVE;
             MoveOrder = MoveOrder.MOVE_ORDER_ATTACKMOVE;
             Replication = new ReplicationMinion(this);
-        }
 
-        public Minion(
-            Game game,
-            MinionSpawnType spawnType,
-            MinionSpawnPosition position,
-            uint netId = 0
-        ) : this(game, spawnType, position, new List<Vector2>(), netId)
-        {
-
-        }
-
-        public void PauseAi(bool b)
-        {
-            _aiPaused = b;
+            Name = name;
         }
 
         public override void OnAdded()
@@ -95,12 +59,8 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
                 {
                     if (!RecalculateAttackPosition())
                     {
-                        KeepFocussingTarget(); // attack target
+                        KeepFocusingTarget(); // attack/follow target
                     }
-                }
-                else
-                {
-                    WalkToDestination(); // walk to destination (or target)
                 }
             }
             Replication.Update();
@@ -109,7 +69,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
         // AI tasks
         protected bool ScanForTargets()
         {
-            if(TargetUnit != null && !TargetUnit.IsDead)
+            if (TargetUnit != null && !TargetUnit.IsDead)
             {
                 return true;
             }
@@ -147,29 +107,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
             return false;
         }
 
-        protected void WalkToDestination()
-        {
-            if (_mainWaypoints.Count > _curMainWaypoint + 1)
-            {
-                if (Waypoints.Count == 1 || CurWaypoint >= Waypoints.Count && ++_curMainWaypoint < _mainWaypoints.Count)
-                {
-                    //CORE_INFO("Minion reached a point! Going to %f; %f", mainWaypoints[curMainWaypoint].X, mainWaypoints[curMainWaypoint].Y);
-                    SetWaypoints(new List<Vector2>() { GetPosition(), _mainWaypoints[_curMainWaypoint] });
-
-                    //TODO: Here we need a certain way to tell if the Minion is in the path/lane, else use pathfinding to return to the lane.
-                    //I think in league when minion start chasing they save Current Position and
-                    //when it stop chasing the minion return to the last saved position, and then continue main waypoints from there.
-
-                    /*var path = _game.Map.NavGrid.GetPath(GetPosition(), _mainWaypoints[_curMainWaypoint + 1]);
-                    if(path.Count > 1)
-                    {
-                        SetWaypoints(path);
-                    }*/
-                }
-            }
-        }
-
-        protected void KeepFocussingTarget()
+        protected void KeepFocusingTarget()
         {
             if (IsAttacking && (TargetUnit == null || TargetUnit.IsDead || GetDistanceTo(TargetUnit) > Stats.Range.Total))
             // If target is dead or out of range

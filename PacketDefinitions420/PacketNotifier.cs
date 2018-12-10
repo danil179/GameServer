@@ -17,6 +17,8 @@ using System.Numerics;
 using System.Timers;
 using PingLoadInfoRequest = GameServerCore.Packets.PacketDefinitions.Requests.PingLoadInfoRequest;
 using ViewRequest = GameServerCore.Packets.PacketDefinitions.Requests.ViewRequest;
+using LeaguePackets.Common;
+using LeaguePackets.CommonData;
 
 namespace PacketDefinitions420
 {
@@ -31,9 +33,9 @@ namespace PacketDefinitions420
             _navGrid = navGrid;
         }
 
-        public void NotifyMinionSpawned(IMinion m, TeamId team)
+        public void NotifyLaneMinionSpawned(ILaneMinion m, TeamId team)
         {
-            var ms = new MinionSpawn(_navGrid, m);
+            var ms = new LaneMinionSpawn(_navGrid, m);
             _packetHandlerManager.BroadcastPacketTeam(team, ms, Channel.CHL_S2C);
             NotifySetHealth(m);
         }
@@ -87,7 +89,7 @@ namespace PacketDefinitions420
             _packetHandlerManager.BroadcastPacketTeam(client.Team, response, Channel.CHL_S2C);
         }
 
-        public void NotifyTint(TeamId team, bool enable, float speed, Color color)
+        public void NotifyTint(TeamId team, bool enable, float speed, GameServerCore.Content.Color color)
         {
             var tint = new SetScreenTint(team, enable, speed, color.R, color.G, color.B, color.A);
             _packetHandlerManager.BroadcastPacket(tint, Channel.CHL_S2C);
@@ -273,7 +275,7 @@ namespace PacketDefinitions420
 
         public void NotifyAvatarInfo(int userId, ClientInfo client)
         {
-            var info = new AvatarInfo(client);
+            var info = new PacketDefinitions.S2C.AvatarInfo(client);
             _packetHandlerManager.SendPacket(userId, info, Channel.CHL_S2C);
         }
 
@@ -401,7 +403,7 @@ namespace PacketDefinitions420
             _packetHandlerManager.BroadcastPacketVision(o, answer, Channel.CHL_LOW_PRIORITY);
         }
 
-        public void NotifyDamageDone(IAttackableUnit source, IAttackableUnit target, float amount, DamageType type, DamageText damagetext, bool isGlobal = true, int sourceId = 0, int targetId = 0)
+        public void NotifyDamageDone(IAttackableUnit source, IAttackableUnit target, float amount, GameServerCore.Enums.DamageType type, DamageText damagetext, bool isGlobal = true, int sourceId = 0, int targetId = 0)
         {
             var dd = new DamageDone(source, target, amount, type, damagetext);
             if (isGlobal)
@@ -597,8 +599,8 @@ namespace PacketDefinitions420
         {
             switch (u)
             {
-                case IMinion m:
-                    NotifyMinionSpawned(m, m.Team.GetEnemyTeam());
+                case ILaneMinion m:
+                    NotifyLaneMinionSpawned(m, m.Team.GetEnemyTeam());
                     break;
                 case IChampion c:
                     NotifyChampionSpawned(c, c.Team.GetEnemyTeam());
@@ -606,8 +608,8 @@ namespace PacketDefinitions420
                 case IMonster monster:
                     NotifyMonsterSpawned(monster);
                     break;
-                case IPlaceable placeable:
-                    NotifyPlaceableSpawned(placeable);
+                case IMinion minion:
+                    NotifyMinionSpawned(minion, minion.Team.GetEnemyTeam());
                     break;
                 case IAzirTurret azirTurret:
                     NotifyAzirTurretSpawned(azirTurret);
@@ -623,10 +625,120 @@ namespace PacketDefinitions420
             _packetHandlerManager.BroadcastPacketVision(azirTurret, spawnPacket, Channel.CHL_S2C);
         }
 
-        private void NotifyPlaceableSpawned(IPlaceable placeable)
+        //public class SpawnMinionS2C : GamePacket // 0x7C
+        //{
+        //    public override GamePacketID ID => GamePacketID.SpawnMinionS2C;
+        //    public NetID NetID { get; set; }
+        //    public NetID OwnerNetID { get; set; }
+        //    public NetNodeID NetNodeID { get; set; }
+        //    public Vector3 Position { get; set; }
+        //    public int SkinID { get; set; }
+        //    public NetID CloneNetID { get; set; }
+        //    public TeamID TeamID { get; set; }
+        //    public bool IgnoreCollision { get; set; }
+        //    public bool IsWard { get; set; }
+        //    public bool IsLaneMinion { get; set; }
+        //    public bool IsBot { get; set; }
+        //    public bool IsTargetable { get; set; }
+
+        //    public SpellFlags IsTargetableToTeam { get; set; }
+        //    public float VisibilitySize { get; set; }
+        //    public string Name { get; set; } = "";
+        //    public string SkinName { get; set; } = "";
+        //    public ushort InitialLevel { get; set; }
+        //    public NetID OnlyVisibleToNetID { get; set; }
+        //    public SpawnMinionS2C() { }
+
+        //    public SpawnMinionS2C(PacketReader reader, ChannelID channelID, NetID senderNetID)
+        //    {
+        //        this.SenderNetID = senderNetID;
+        //        this.ChannelID = channelID;
+
+        //        this.NetID = reader.ReadNetID();
+        //        this.OwnerNetID = reader.ReadNetID();
+        //        this.NetNodeID = reader.ReadNetNodeID();
+        //        this.Position = reader.ReadVector3();
+        //        this.SkinID = reader.ReadInt32();
+        //        this.CloneNetID = reader.ReadNetID();
+        //        ushort bitfield = reader.ReadUInt16();
+        //        this.TeamID = (TeamID)(bitfield & 0x1FF);
+        //        this.IgnoreCollision = (bitfield & 0x0200) != 0;
+        //        this.IsWard = (bitfield & 0x0400) != 0;
+        //        this.IsLaneMinion = (bitfield & 0x0800) != 0;
+        //        this.IsBot = (bitfield & 0x1000) != 0;
+        //        this.IsTargetable = (bitfield & 0x2000) != 0;
+
+        //        this.IsTargetableToTeam = reader.ReadSpellFlags();
+        //        this.VisibilitySize = reader.ReadFloat();
+        //        this.Name = reader.ReadFixedString(64);
+        //        this.SkinName = reader.ReadFixedString(64);
+        //        this.InitialLevel = reader.ReadUInt16();
+        //        this.OnlyVisibleToNetID = reader.ReadNetID();
+
+        //        this.ExtraBytes = reader.ReadLeft();
+        //    }
+        //    public override void WriteBody(PacketWriter writer)
+        //    {
+        //        writer.WriteNetID(NetID);
+        //        writer.WriteNetID(OwnerNetID);
+        //        writer.WriteNetNodeID(NetNodeID);
+        //        writer.WriteVector3(Position);
+        //        writer.WriteInt32(SkinID);
+        //        writer.WriteNetID(CloneNetID);
+        //        ushort bitfield = 0;
+        //        bitfield |= (ushort)((ushort)TeamID & 0x01FF);
+        //        if (IgnoreCollision)
+        //            bitfield |= 0x0200;
+        //        if (IsWard)
+        //            bitfield |= 0x0400;
+        //        if (IsLaneMinion)
+        //            bitfield |= 0x0800;
+        //        if (IsBot)
+        //            bitfield |= 0x1000;
+        //        if (IsTargetable)
+        //            bitfield |= 0x2000;
+
+        //        writer.WriteUInt16(bitfield);
+        //        writer.WriteSpellFlags(IsTargetableToTeam);
+        //        writer.WriteFloat(VisibilitySize);
+        //        writer.WriteFixedString(Name, 64);
+        //        writer.WriteFixedString(SkinName, 64);
+        //        writer.WriteUInt16(InitialLevel);
+        //        writer.WriteNetID(OnlyVisibleToNetID);
+        //    }
+        //}
+
+        public void NotifyMinionSpawned(IMinion minion, TeamId team)
         {
-            var spawnPacket = new SpawnPlaceable(placeable);
-            _packetHandlerManager.BroadcastPacketVision(placeable, spawnPacket, Channel.CHL_S2C);
+            var spawnPacket = new LeaguePackets.GamePackets.SpawnMinionS2C();
+            spawnPacket.NetID = (NetID)minion.NetId;
+            spawnPacket.SenderNetID = (NetID)minion.NetId;
+            spawnPacket.OwnerNetID = (NetID)minion.Owner.NetId;
+            spawnPacket.NetNodeID = NetNodeID.Spawned;
+            spawnPacket.Position = new Vector3(minion.GetPosition().X, minion.GetZ(), minion.GetPosition().Y); // check if work, probably not
+            spawnPacket.TeamID = (TeamID)minion.Team;
+            spawnPacket.Name = minion.Name;
+            spawnPacket.SkinName = minion.Model;
+            spawnPacket.InitialLevel = 1;
+            spawnPacket.VisibilitySize = 0;
+            spawnPacket.SkinID = 0;
+            spawnPacket.IsTargetable = true;
+            spawnPacket.IsWard = true;
+            spawnPacket.IsTargetableToTeam = SpellFlags.TargetableToAll;
+            var visionPacket = new LeaguePackets.GamePackets.OnEnterVisiblityClient();
+            var vd = new LeaguePackets.CommonData.VisibilityDataAIMinion();
+            vd.LookAtPosition = new Vector3(1, 0, 0);
+            var md = new LeaguePackets.CommonData.MovementDataStop();
+            md.Position = minion.GetPosition();
+            md.Forward = new Vector2(0, 1);
+            vd.MovementSyncID = 0x0006E4CF;
+            vd.MovementData = md;
+            visionPacket.VisibilityData = vd;
+            visionPacket.Packets.Add(spawnPacket);
+            visionPacket.SenderNetID = (NetID)minion.NetId;
+            _packetHandlerManager.BroadcastPacketVision(minion, visionPacket.GetBytes(), Channel.CHL_S2C);
+            //var spawnPacket = new SpawnMinion(minion);
+            //_packetHandlerManager.BroadcastPacketVision(minion, spawnPacket, Channel.CHL_S2C);
         }
 
         private void NotifyMonsterSpawned(IMonster m)

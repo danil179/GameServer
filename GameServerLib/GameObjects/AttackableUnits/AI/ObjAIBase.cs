@@ -289,29 +289,36 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
             {
                 switch (target)
                 {
-                    // If it's a champion attacking an allied champion
+                    // Champion attacking an allied champion
                     case IChampion _ when ai.TargetUnit is IChampion:
                         return ClassifyUnit.CHAMPION_ATTACKING_CHAMPION;
-                    // If it's a minion attacking an allied champion.
+                    // Champion attacking minion
+                    case IChampion _ when ai.TargetUnit is IMinion:
+                        return ClassifyUnit.CHAMPION_ATTACKING_MINION;
+                    // Minion attacking an allied champion.
                     case IMinion _ when ai.TargetUnit is IChampion:
                         return ClassifyUnit.MINION_ATTACKING_CHAMPION;
                     // Minion attacking minion
                     case IMinion _ when ai.TargetUnit is IMinion:
                         return ClassifyUnit.MINION_ATTACKING_MINION;
+                    // Placeable (minion) attacking champion
+                    case IMinion _ when ai.TargetUnit is IChampion:
+                        return ClassifyUnit.MINION_ATTACKING_CHAMPION;
+                    // Placeable (minion) attacking minion
+                    case IMinion _ when ai.TargetUnit is IChampion:
+                        return ClassifyUnit.MINION_ATTACKING_MINION;
                     // Turret attacking minion
                     case IBaseTurret _ when ai.TargetUnit is IMinion:
                         return ClassifyUnit.TURRET_ATTACKING_MINION;
-                    // Champion attacking minion
-                    case IChampion _ when ai.TargetUnit is IMinion:
-                        return ClassifyUnit.CHAMPION_ATTACKING_MINION;
+
                 }
             }
         
             switch (target)
             {
-                case IPlaceable _:
-                    return ClassifyUnit.PLACEABLE;
-                case IMinion m:
+                case IMinion _:
+                    return ClassifyUnit.MINION;
+                case ILaneMinion m:
                     switch (m.MinionSpawnType)
                     {
                         case MinionSpawnType.MINION_TYPE_MELEE:
@@ -364,8 +371,8 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
             if (HasCrowdControl(CrowdControlType.BLIND))
             {
                 target.TakeDamage(this, 0, DamageType.DAMAGE_TYPE_PHYSICAL,
-                                             DamageSource.DAMAGE_SOURCE_ATTACK,
-                                             DamageText.DAMAGE_TEXT_MISS);
+                                                 DamageSource.DAMAGE_SOURCE_ATTACK,
+                                                 DamageText.DAMAGE_TEXT_MISS);
                 return;
             }
 
@@ -548,7 +555,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
 
         public bool RecalculateAttackPosition()
         {
-            if (Target != null && TargetUnit != null && !TargetUnit.IsDead && GetDistanceTo(Target) < CollisionRadius && GetDistanceTo(TargetUnit.X, TargetUnit.Y) <= Stats.Range.Total)//If we are already where we should be, do not move.
+            if (Target != null && TargetUnit != null && !TargetUnit.IsDead && GetDistanceTo(Target) < CollisionRadius && GetDistanceTo(TargetUnit.X, TargetUnit.Y) <= Stats.Range.Total) //If we are already where we should be, do not move.
             {
                 return false;
             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using GameServerCore;
 using GameServerCore.Enums;
 using LeagueSandbox.GameServer.Logging;
 using log4net;
