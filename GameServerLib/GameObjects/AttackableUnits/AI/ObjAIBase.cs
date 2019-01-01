@@ -289,38 +289,29 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
             {
                 switch (target)
                 {
-                    // Champion attacking an allied champion
+                    // If it's a champion attacking an allied champion
                     case IChampion _ when ai.TargetUnit is IChampion:
                         return ClassifyUnit.CHAMPION_ATTACKING_CHAMPION;
-                    // Champion attacking lane minion
-                    case IChampion _ when ai.TargetUnit is ILaneMinion:
-                        return ClassifyUnit.CHAMPION_ATTACKING_MINION;
-                    // Champion attacking minion
-                    case IChampion _ when ai.TargetUnit is IMinion:
-                        return ClassifyUnit.CHAMPION_ATTACKING_MINION;
-                    // Minion attacking an allied champion.
+                    // If it's a minion attacking an allied champion.
                     case IMinion _ when ai.TargetUnit is IChampion:
                         return ClassifyUnit.MINION_ATTACKING_CHAMPION;
-                    // Minion attacking lane minion
-                    case IMinion _ when ai.TargetUnit is ILaneMinion:
-                        return ClassifyUnit.MINION_ATTACKING_MINION;
                     // Minion attacking minion
                     case IMinion _ when ai.TargetUnit is IMinion:
                         return ClassifyUnit.MINION_ATTACKING_MINION;
-                    // Turret attacking lane minion
-                    case IBaseTurret _ when ai.TargetUnit is ILaneMinion:
-                        return ClassifyUnit.TURRET_ATTACKING_MINION;
                     // Turret attacking minion
                     case IBaseTurret _ when ai.TargetUnit is IMinion:
                         return ClassifyUnit.TURRET_ATTACKING_MINION;
+                    // Champion attacking minion
+                    case IChampion _ when ai.TargetUnit is IMinion:
+                        return ClassifyUnit.CHAMPION_ATTACKING_MINION;
                 }
             }
         
             switch (target)
             {
-                case IMinion _:
-                    return ClassifyUnit.MINION;
-                case ILaneMinion m:
+                case IPlaceable _:
+                    return ClassifyUnit.PLACEABLE;
+                case IMinion m:
                     switch (m.MinionSpawnType)
                     {
                         case MinionSpawnType.MINION_TYPE_MELEE:
