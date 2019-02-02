@@ -458,6 +458,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
                 else if (GetDistanceTo(TargetUnit) <= Stats.Range.Total)
                 {
                     RefreshWaypoints();
+                    if(IsDashing) SetDashingState(false); // if was dashing disable it
                     _isNextAutoCrit = _random.Next(0, 100) < Stats.CriticalChance.Total * 100;
                     if (_autoAttackCurrentCooldown <= 0)
                     {
