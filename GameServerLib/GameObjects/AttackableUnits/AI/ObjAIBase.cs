@@ -51,6 +51,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
         public bool IsMelee { get; set; }
         public bool IsDashing { get; protected set; }
         private IStatModifier _dashModifier;
+        private ITarget _dashTarget;
 
         private Random _random = new Random();
 
@@ -458,7 +459,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
                 else if (GetDistanceTo(TargetUnit) <= Stats.Range.Total)
                 {
                     RefreshWaypoints();
-                    if(IsDashing) SetDashingState(false); // if was dashing disable it
+                    
                     _isNextAutoCrit = _random.Next(0, 100) < Stats.CriticalChance.Total * 100;
                     if (_autoAttackCurrentCooldown <= 0)
                     {
@@ -529,6 +530,10 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
             _crowdControlList.RemoveAll(cc => cc.IsRemoved);
 
             var onUpdate = _scriptEngine.GetStaticMethod<Action<IAttackableUnit, double>>(Model, "Passive", "OnUpdate");
+            if (IsDashing && Target is null)
+            {
+                SetDashingState(false); // if was dashing disable it
+            }
             onUpdate?.Invoke(this, diff);
             BuffGameScriptControllers.RemoveAll(b => b.NeedsRemoved());
             base.Update(diff);
@@ -648,7 +653,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
             Target = t;
             Waypoints.Clear();
             _dashModifier = new StatModifier();
-            _dashModifier.BaseBonus = dashSpeed;
+            _dashModifier.BaseBonus = dashSpeed-GetMoveSpeed();
             Stats.MoveSpeed.ApplyStatModificator(_dashModifier);
             RefreshWaypoints();
 
@@ -658,9 +663,10 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
         {
             IsDashing = state;
             
-            if(IsDashing == false)
+            if(IsDashing == false && !(_dashModifier is null))
             {
                 Stats.MoveSpeed.RemoveStatModificator(_dashModifier);
+                _dashModifier = null;
             }
         }
     }
