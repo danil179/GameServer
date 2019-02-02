@@ -50,6 +50,7 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
         public bool IsCastingSpell { get; set; }
         public bool IsMelee { get; set; }
         public bool IsDashing { get; protected set; }
+        private IStatModifier _dashModifier;
 
         private Random _random = new Random();
 
@@ -645,11 +646,21 @@ namespace LeagueSandbox.GameServer.GameObjects.AttackableUnits.AI
             IsDashing = true;
             Target = t;
             Waypoints.Clear();
+            _dashModifier = new StatModifier();
+            _dashModifier.BaseBonus = dashSpeed;
+            Stats.MoveSpeed.ApplyStatModificator(_dashModifier);
+            RefreshWaypoints();
+
         }
 
         public void SetDashingState(bool state)
         {
             IsDashing = state;
+            
+            if(IsDashing == false)
+            {
+                Stats.MoveSpeed.RemoveStatModificator(_dashModifier);
+            }
         }
     }
 }
