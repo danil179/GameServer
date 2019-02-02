@@ -774,16 +774,29 @@ namespace PacketDefinitions420
                                float backDistance,
                                float travelTime)
         {
-            var dash = new Dash(_navGrid,
-                                u,
-                                t,
-                                dashSpeed,
-                                keepFacingLastDirection,
-                                leapHeight,
-                                followTargetMaxDistance,
-                                backDistance,
-                                travelTime);
-            _packetHandlerManager.BroadcastPacketVision(u, dash, Channel.CHL_S2C);
+            var speedParams = new SpeedParams();
+            speedParams.ParabolicGravity = leapHeight;
+            speedParams.ParabolicStartPoint = u.GetPosition();
+            speedParams.PathSpeedOverride = dashSpeed;
+            speedParams.FollowDistance = followTargetMaxDistance;
+            speedParams.FollowTravelTime = travelTime;
+            speedParams.FollowBackDistance = backDistance;
+            speedParams.Facing = keepFacingLastDirection;
+            if (!t.IsSimpleTarget) speedParams.FollowNetID = ((IGameObject)t).NetId;
+
+            var dashPoint = new MovementDataWithSpeed();
+            dashPoint.SpeedParams = speedParams;
+            dashPoint.HasTeleportID = false;
+            dashPoint.Waypoints = new List<CompressedWaypoint>(){ new CompressedWaypoint((short)u.X, (short)u.Y), new CompressedWaypoint((short)t.X, (short)t.Y) };
+
+            var mds = new List<MovementDataWithSpeed>(1); // Currently this is only 1 dash
+            mds.Add(dashPoint);
+            var packet = new WaypointGroupWithSpeed();
+            packet.SyncID = Environment.TickCount; //TODO: enter here an actual syncID
+            packet.SenderNetID = u.NetId;
+            packet.Movements = mds;
+
+            _packetHandlerManager.BroadcastPacketVision(u, packet.GetBytes(), Channel.CHL_S2C);
         }
     }
 }
